@@ -17,6 +17,14 @@ abstract contract ERC20R {
         uint256 amount
     );
 
+    event TimeApproval(
+        address indexed owner,
+        address indexed spender,
+        uint256 amount,
+        uint256 timePeriod,
+        uint256 timeLimit
+    );
+
     /*//////////////////////////////////////////////////////////////
                             METADATA STORAGE
     //////////////////////////////////////////////////////////////*/
@@ -46,6 +54,14 @@ abstract contract ERC20R {
     bytes32 internal immutable INITIAL_DOMAIN_SEPARATOR;
 
     mapping(address => uint256) public nonces;
+
+    struct interval {
+        uint256 amount;
+        uint256 timePeriod;
+        uint256 timeLimit;
+    }
+
+    mapping(address => mapping(address => interval)) public timeAllowance;
 
     /*//////////////////////////////////////////////////////////////
                                CONSTRUCTOR
@@ -83,8 +99,16 @@ abstract contract ERC20R {
     function intervalApprove(
         address spender,
         uint256 amount,
-        uint256 timePeriod
-    ) public virtual returns (bool) {}
+        uint256 timePeriod,
+        uint256 timeLimit
+    ) public virtual returns (bool) {
+        interval memory _interval = interval(amount, timePeriod, timeLimit);
+        timeAllowance[msg.sender][spender] = _interval;
+
+        emit TimeApproval(msg.sender, spender, amount, timePeriod, timeLimit);
+
+        return true;
+    }
 
     function transfer(address to, uint256 amount)
         public
