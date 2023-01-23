@@ -17,7 +17,7 @@ abstract contract ERC20R {
         uint256 amount
     );
 
-    event TimeApproval(
+    event RecurringApproval(
         address indexed owner,
         address indexed spender,
         uint256 amount,
@@ -45,6 +45,15 @@ abstract contract ERC20R {
 
     mapping(address => mapping(address => uint256)) public allowance;
 
+    struct recurring {
+        uint256 allowedAmount;
+        uint256 timePeriod;
+        uint256 timeLimit;
+        uint256 nextInterval;
+    }
+
+    mapping(address => mapping(address => recurring)) public recurringAllowance;
+
     /*//////////////////////////////////////////////////////////////
                             EIP-2612 STORAGE
     //////////////////////////////////////////////////////////////*/
@@ -54,14 +63,6 @@ abstract contract ERC20R {
     bytes32 internal immutable INITIAL_DOMAIN_SEPARATOR;
 
     mapping(address => uint256) public nonces;
-
-    struct recurring {
-        uint256 amount;
-        uint256 timePeriod;
-        uint256 timeLimit;
-    }
-
-    mapping(address => mapping(address => recurring)) public recurringAllowance;
 
     /*//////////////////////////////////////////////////////////////
                                CONSTRUCTOR
@@ -102,10 +103,21 @@ abstract contract ERC20R {
         uint256 timePeriod,
         uint256 timeLimit
     ) public virtual returns (bool) {
-        recurring memory _recurring = recurring(amount, timePeriod, timeLimit);
+        recurring memory _recurring = recurring(
+            amount,
+            timePeriod,
+            block.timestamp + timeLimit,
+            block.timestamp
+        );
         recurringAllowance[msg.sender][spender] = _recurring;
 
-        emit TimeApproval(msg.sender, spender, amount, timePeriod, timeLimit);
+        emit RecurringApproval(
+            msg.sender,
+            spender,
+            amount,
+            timePeriod,
+            timeLimit
+        );
 
         return true;
     }
@@ -156,6 +168,16 @@ abstract contract ERC20R {
         address to,
         uint256 amount
     ) public virtual returns (bool) {
+        recurring memory _recurring = recurringAllowance[from][msg.sender];
+        require(
+            _recurring.nextInterval <= block.timestamp,
+            "INTERVAL_NOT_YET_FINISHED"
+        );
+        require(_recurring.timeLimit <= block.timestamp, "TIME_LIMIT_REACHED");
+
+        recurringAllowance[from][msg.sender].nextInterval += _recurring
+            .timePeriod;
+
         balanceOf[from] -= amount;
 
         // Cannot overflow because the sum of all user
