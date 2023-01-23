@@ -55,13 +55,13 @@ abstract contract ERC20R {
 
     mapping(address => uint256) public nonces;
 
-    struct interval {
+    struct recurring {
         uint256 amount;
         uint256 timePeriod;
         uint256 timeLimit;
     }
 
-    mapping(address => mapping(address => interval)) public timeAllowance;
+    mapping(address => mapping(address => recurring)) public recurringAllowance;
 
     /*//////////////////////////////////////////////////////////////
                                CONSTRUCTOR
@@ -96,14 +96,14 @@ abstract contract ERC20R {
         return true;
     }
 
-    function intervalApprove(
+    function recurringApprove(
         address spender,
         uint256 amount,
         uint256 timePeriod,
         uint256 timeLimit
     ) public virtual returns (bool) {
-        interval memory _interval = interval(amount, timePeriod, timeLimit);
-        timeAllowance[msg.sender][spender] = _interval;
+        recurring memory _recurring = recurring(amount, timePeriod, timeLimit);
+        recurringAllowance[msg.sender][spender] = _recurring;
 
         emit TimeApproval(msg.sender, spender, amount, timePeriod, timeLimit);
 
@@ -151,11 +151,23 @@ abstract contract ERC20R {
         return true;
     }
 
-    function transferFromInterval(
+    function transferFromRecurring(
         address from,
         address to,
         uint256 amount
-    ) public virtual returns (bool) {}
+    ) public virtual returns (bool) {
+        balanceOf[from] -= amount;
+
+        // Cannot overflow because the sum of all user
+        // balances can't exceed the max uint256 value.
+        unchecked {
+            balanceOf[to] += amount;
+        }
+
+        emit Transfer(from, to, amount);
+
+        return true;
+    }
 
     /*//////////////////////////////////////////////////////////////
                              EIP-2612 LOGIC
