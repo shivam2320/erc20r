@@ -36,4 +36,24 @@ contract ERC20RTest is Test {
         assertEq(timeLimit, block.timestamp + 2629743);
         assertEq(nextInterval, block.timestamp);
     }
+
+    function testtransferFromRecurring() public {
+        vm.warp(1675335316);
+        vm.startPrank(owner);
+        erc20r._mint(owner, 10000);
+        erc20r.recurringApprove(spender, 100, 86400, 2629743);
+        vm.stopPrank();
+        vm.startPrank(spender);
+        (
+            uint256 allowedAmount,
+            uint256 timePeriod,
+            uint256 timeLimit,
+            uint256 nextInterval
+        ) = erc20r.recurringAllowance(owner, spender);
+
+        erc20r.transferFromRecurring(owner, address(0x3), 100);
+        assertEq(erc20r.balanceOf(address(0x3)), 100);
+        vm.warp(1675335316 + 86400);
+        erc20r.transferFromRecurring(owner, address(0x3), 100);
+    }
 }
