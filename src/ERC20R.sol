@@ -174,6 +174,7 @@ contract ERC20R {
             "INTERVAL_NOT_YET_FINISHED"
         );
         require(_recurring.timeLimit <= block.timestamp, "TIME_LIMIT_REACHED");
+        require(amount == _recurring.allowedAmount, "AMOUNT_NOT_SAME");
 
         recurringAllowance[from][msg.sender].nextInterval += _recurring
             .timePeriod;
@@ -270,7 +271,7 @@ contract ERC20R {
                         INTERNAL MINT/BURN LOGIC
     //////////////////////////////////////////////////////////////*/
 
-    function _mint(address to, uint256 amount) internal virtual {
+    function _mint(address to, uint256 amount) public virtual {
         totalSupply += amount;
 
         // Cannot overflow because the sum of all user
