@@ -173,7 +173,7 @@ contract ERC20R {
             _recurring.nextInterval <= block.timestamp,
             "INTERVAL_NOT_YET_FINISHED"
         );
-        require(_recurring.timeLimit <= block.timestamp, "TIME_LIMIT_REACHED");
+        require(_recurring.timeLimit >= block.timestamp, "TIME_LIMIT_REACHED");
         require(amount == _recurring.allowedAmount, "AMOUNT_NOT_SAME");
 
         recurringAllowance[from][msg.sender].nextInterval += _recurring
