@@ -4,7 +4,7 @@ pragma solidity >=0.8.0;
 /// @notice Modern and gas efficient ERC20 + EIP-2612 implementation.
 /// @author Modified from Solmate (https://github.com/transmissions11/solmate/blob/main/src/tokens/ERC20.sol)
 /// @dev Do not manually set balances without updating totalSupply, as the sum of all user balances must not exceed it.
-contract ERC20R {
+abstract contract ERC20R {
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
@@ -107,7 +107,7 @@ contract ERC20R {
             amount,
             timePeriod,
             block.timestamp + timeLimit,
-            block.timestamp
+            0
         );
         recurringAllowance[msg.sender][spender] = _recurring;
 
@@ -176,8 +176,9 @@ contract ERC20R {
         require(_recurring.timeLimit >= block.timestamp, "TIME_LIMIT_REACHED");
         require(amount == _recurring.allowedAmount, "AMOUNT_NOT_SAME");
 
-        recurringAllowance[from][msg.sender].nextInterval += _recurring
-            .timePeriod;
+        recurringAllowance[from][msg.sender].nextInterval =
+            block.timestamp +
+            _recurring.timePeriod;
 
         balanceOf[from] -= amount;
 
@@ -271,7 +272,7 @@ contract ERC20R {
                         INTERNAL MINT/BURN LOGIC
     //////////////////////////////////////////////////////////////*/
 
-    function _mint(address to, uint256 amount) public virtual {
+    function _mint(address to, uint256 amount) internal virtual {
         totalSupply += amount;
 
         // Cannot overflow because the sum of all user
