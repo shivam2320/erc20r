@@ -4,7 +4,7 @@ pragma solidity >=0.8.0;
 /// @notice Modern and gas efficient ERC20 + EIP-2612 implementation.
 /// @author Modified from Solmate (https://github.com/transmissions11/solmate/blob/main/src/tokens/ERC20.sol)
 /// @dev Do not manually set balances without updating totalSupply, as the sum of all user balances must not exceed it.
-abstract contract ERC20R {
+contract ERC20R {
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
@@ -45,14 +45,14 @@ abstract contract ERC20R {
 
     mapping(address => mapping(address => uint256)) public allowance;
 
-    struct recurring {
+    struct Recurring {
         uint256 allowedAmount;
         uint256 timePeriod;
         uint256 timeLimit;
         uint256 nextInterval;
     }
 
-    mapping(address => mapping(address => recurring)) public recurringAllowance;
+    mapping(address => mapping(address => Recurring)) public recurringAllowance;
 
     /*//////////////////////////////////////////////////////////////
                             EIP-2612 STORAGE
@@ -103,7 +103,7 @@ abstract contract ERC20R {
         uint256 timePeriod,
         uint256 timeLimit
     ) public virtual returns (bool) {
-        recurring memory _recurring = recurring(
+        Recurring memory _recurring = Recurring(
             amount,
             timePeriod,
             block.timestamp + timeLimit,
@@ -168,7 +168,7 @@ abstract contract ERC20R {
         address to,
         uint256 amount
     ) public virtual returns (bool) {
-        recurring memory _recurring = recurringAllowance[from][msg.sender];
+        Recurring memory _recurring = recurringAllowance[from][msg.sender];
         require(
             _recurring.nextInterval <= block.timestamp,
             "INTERVAL_NOT_YET_FINISHED"
