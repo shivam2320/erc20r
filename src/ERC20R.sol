@@ -107,7 +107,7 @@ abstract contract ERC20R {
             amount,
             timePeriod,
             block.timestamp + timeLimit,
-            0
+            block.timestamp
         );
         recurringAllowance[msg.sender][spender] = _recurring;
 
@@ -176,9 +176,7 @@ abstract contract ERC20R {
         require(_recurring.timeLimit >= block.timestamp, "TIME_LIMIT_REACHED");
         require(amount == _recurring.allowedAmount, "AMOUNT_NOT_SAME");
 
-        recurringAllowance[from][msg.sender].nextInterval =
-            block.timestamp +
-            _recurring.timePeriod;
+        recurringAllowance[from][msg.sender].nextInterval += _recurring.timePeriod;
 
         balanceOf[from] -= amount;
 
